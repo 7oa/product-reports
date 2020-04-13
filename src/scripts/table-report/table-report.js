@@ -1,9 +1,11 @@
 import Filter from "./filter.js";
 import Pagination from "./pagination.js";
 import { imageLink } from "./image-link.js";
+import { sortFunc } from "../utils.js";
 
 class TableReport {
   constructor(props) {
+    this.element = document.querySelector(props.element);
     this.initialData = [...props.data];
     this.data = [...props.data];
     this.columns = props.columns;
@@ -11,26 +13,35 @@ class TableReport {
     this.sortField = "";
     this.filter = new Filter({
       element: ".js-table-filter",
+      table: this.element,
       data: this.data,
       columns: this.columns.filter((el) => el.filter === true),
       onFilterChange: this.onFilterChange.bind(this),
     });
     this.pagination = new Pagination({
       element: ".js-table-pagination",
+      table: this.element,
       itemsPerPage: props.itemsPerPage,
       dataLength: this.data.length,
       onPageChange: this.onPageChange.bind(this),
     });
   }
 
+  get elements() {
+    return {
+      tableHead: this.element.querySelector(".js-table-head"),
+      tableBody: this.element.querySelector(".js-table-body"),
+    };
+  }
+
   bindEvents() {
-    document.querySelector(".js-table-head").addEventListener("click", (evt) => {
+    this.elements.tableHead.addEventListener("click", (evt) => {
       evt.preventDefault();
       if (evt.target.classList.contains("js-sort")) {
         const sortField = evt.target.dataset.field;
         const sortOrder = evt.target.dataset.sort;
 
-        document.querySelectorAll(".js-sort").forEach((el) => {
+        this.element.querySelectorAll(".js-sort").forEach((el) => {
           el.dataset.sort = "";
         });
 
@@ -88,18 +99,10 @@ class TableReport {
     const orderBy = this.sortOrder;
     switch (orderBy) {
       case "asc":
-        sortedData = data.sort((a, b) => {
-          if (a[field] > b[field]) return 1;
-          if (a[field] < b[field]) return -1;
-          return 0;
-        });
+        sortedData = data.sort(sortFunc(field, "asc"));
         break;
       case "desc":
-        sortedData = data.sort((a, b) => {
-          if (a[field] < b[field]) return 1;
-          if (a[field] > b[field]) return -1;
-          return 0;
-        });
+        sortedData = data.sort(sortFunc(field, "desc"));
         break;
       case "":
         sortedData = data;
@@ -173,7 +176,7 @@ class TableReport {
     const dataTo = dataFrom + itemsPerPage;
 
     const template = this._template(this.data.slice(dataFrom, dataTo));
-    document.querySelector(".table__body").innerHTML = template.join(" ");
+    this.elements.tableBody.innerHTML = template.join(" ");
     this.pagination.render();
   }
 
@@ -192,7 +195,7 @@ class TableReport {
             ${this._generateHead()}
           </div>
         </div>
-        <div class="table__body">
+        <div class="table__body js-table-body">
         </div>
         <div class="table__pagination-wrapper">
           <div class="table__pagination js-table-pagination"></div>
@@ -200,7 +203,7 @@ class TableReport {
       </div>
     `;
 
-    document.querySelector("#app").innerHTML = template;
+    this.element.innerHTML = template;
     this.renderData();
     this.filter.render();
     this.bindEvents();

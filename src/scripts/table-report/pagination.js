@@ -1,14 +1,22 @@
 class Pagination {
   constructor(props) {
     this.element = props.element;
+    this.table = props.table;
     this.itemsPerPage = props.itemsPerPage;
     this.dataLength = props.dataLength;
     this.currentPage = 1;
     this.onPageChange = props.onPageChange;
   }
 
+  get elements() {
+    return {
+      pagination: this.table.querySelectorAll(this.element),
+      itemsPerPage: this.table.querySelector(".js-items-per-page"),
+    };
+  }
+
   bindEvents() {
-    document.querySelectorAll(".js-pagination").forEach((el) => {
+    this.elements.pagination.forEach((el) => {
       el.addEventListener("click", (evt) => {
         evt.preventDefault();
         if (evt.target.classList.contains("js-pagination-item")) {
@@ -17,7 +25,7 @@ class Pagination {
         }
       });
     });
-    document.querySelector(".js-items-per-page").addEventListener("change", (evt) => {
+    this.elements.itemsPerPage.addEventListener("change", (evt) => {
       evt.preventDefault();
       let itemsPerPage = evt.target.value;
       if (itemsPerPage !== this.itemsPerPage) {
@@ -94,6 +102,10 @@ class Pagination {
       pages = pages.concat(withDots(length, ["...", length]));
     }
 
+    return pages;
+  }
+
+  renderPagination(pages, pageCount) {
     const pagesList = pages.map((page) => {
       if (page !== "...") {
         return `
@@ -108,20 +120,20 @@ class Pagination {
       } else return `<span class="pagination__dots">${page}</span>`;
     });
 
-    return pagesList;
+    const template = `
+      <div class="pagination js-pagination">
+        ${pageCount > 1 ? pagesList.join(" ") : ""}
+      </div>
+    `;
+
+    return template;
   }
 
   render() {
     const pageCount = Math.ceil(this.dataLength / this.itemsPerPage);
-
-    const template = `
-      <div class="pagination js-pagination">
-        ${pageCount > 1 ? this._generatePages(pageCount).join(" ") : ""}
-      </div>
-    `;
-
-    document.querySelectorAll(this.element).forEach((el) => {
-      el.innerHTML = template;
+    const pages = this._generatePages(pageCount);
+    this.elements.pagination.forEach((el) => {
+      el.innerHTML = this.renderPagination(pages, pageCount);
     });
     this.bindEvents();
   }

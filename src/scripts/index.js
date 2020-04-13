@@ -55,10 +55,11 @@ const columns = [
   },
 ];
 
-new Data().getData("data/product-data.json").then((data) => {
+new Data().getData("../data/product-data.json").then((data) => {
   new TableReport({
+    element: "#app",
     data,
-    itemsPerPage: 50,
+    itemsPerPage: 30,
     columns,
   }).renderTable();
 });
