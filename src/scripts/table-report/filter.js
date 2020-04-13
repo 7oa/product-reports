@@ -1,47 +1,45 @@
 class Filter {
   constructor(props) {
     this.element = props.element;
+    this.table = props.table;
     this.data = props.data;
     this.columns = props.columns;
     this.onFilterChange = props.onFilterChange;
     this.filter = [];
   }
 
+  get elements() {
+    return {
+      filter: this.table.querySelector(this.element),
+      form: this.table.querySelector(".js-filter-form"),
+      buttonResetFilter: this.table.querySelector(".js-reset-filter"),
+      filterInputs: this.table.querySelectorAll(".js-filter-input"),
+    };
+  }
+
   bindEvents() {
-    const form = document.querySelector(".js-filter-form");
-    const buttonResetFilter = document.querySelector(".js-reset-filter");
-    const filterInputs = document.querySelectorAll(".js-filter-input");
+    const form = this.elements.form;
+    const buttonResetFilter = this.elements.buttonResetFilter;
 
     form.addEventListener("submit", (evt) => {
       evt.preventDefault();
-      let filter = [];
-      filterInputs.forEach((input) => {
-        if (input.classList.contains("min") && input.value !== input.min) {
-          filter.push({
-            name: input.getAttribute("name"),
-            min: input.value,
-          });
-        }
-        if (input.classList.contains("max") && input.value !== input.max) {
-          filter.push({
-            name: input.getAttribute("name"),
-            max: input.value,
-          });
-        }
-      });
-      this.setFilter(filter);
+      this._submit();
     });
 
-    filterInputs.forEach((input) => {
-      input.addEventListener("change", (evt) => {
-        evt.preventDefault();
+    form.addEventListener("change", (evt) => {
+      evt.preventDefault();
+      const input = evt.target;
+      if (input.classList.contains("js-filter-input")) {
         this.validation(input);
-      });
+      }
+    });
 
-      input.addEventListener("keyup", (evt) => {
-        evt.preventDefault;
+    form.addEventListener("keyup", (evt) => {
+      evt.preventDefault();
+      const input = evt.target;
+      if (input.classList.contains("js-filter-input")) {
         input.value = input.value.replace(/\D/g, "");
-      });
+      }
     });
 
     buttonResetFilter.addEventListener("click", (evt) => {
@@ -51,9 +49,28 @@ class Filter {
     });
   }
 
+  _submit() {
+    const filterInputs = this.elements.filterInputs;
+    let filter = [];
+    filterInputs.forEach((input) => {
+      if (input.classList.contains("min") && input.value !== input.min) {
+        filter.push({
+          name: input.getAttribute("name"),
+          min: input.value,
+        });
+      }
+      if (input.classList.contains("max") && input.value !== input.max) {
+        filter.push({
+          name: input.getAttribute("name"),
+          max: input.value,
+        });
+      }
+    });
+    this.setFilter(filter);
+  }
+
   setFilter(filter) {
     if (JSON.stringify(filter) !== JSON.stringify(this.filter)) {
-      this.filter = [];
       this.filter = filter;
       this.onFilterChange();
     }
@@ -61,29 +78,34 @@ class Filter {
 
   validation(input) {
     const name = input.name;
-    let value = 0;
-    if (input.classList.contains("min")) {
-      value = document.querySelector(`.js-filter-input.max[name=${name}]`).value;
-      if (+input.value > +value) {
-        input.value = value;
-      }
-      if (+input.value < +input.min) {
-        input.value = input.min;
-      }
-    }
-    if (input.classList.contains("max")) {
-      value = document.querySelector(`.js-filter-input.min[name=${name}]`).value;
-      if (+input.value < +value) {
-        input.value = value;
-      }
-      if (+input.value > +input.max) {
-        input.value = input.max;
-      }
-    }
+    const value = Number(input.value);
+    const filter = this.filters.find((f) => f.field === input.name);
 
-    if (input.value === "") {
-      input.value = 0;
+    if (value > filter.max) {
+      input.value = filter.max;
+    } else if (value < filter.min) {
+      input.value = filter.min;
+    } else {
+      if (input.classList.contains("min")) {
+        const maxValue = this.getMaxInputValue(name);
+        if (value > maxValue) {
+          input.value = maxValue;
+        }
+      } else {
+        const minValue = this.getMinInputValue(name);
+        if (value < minValue) {
+          input.value = minValue;
+        }
+      }
     }
+  }
+
+  getMinInputValue(name) {
+    return this.table.querySelector(`.js-filter-input.min[name=${name}]`).value;
+  }
+
+  getMaxInputValue(name) {
+    return this.table.querySelector(`.js-filter-input.max[name=${name}]`).value;
   }
 
   _generateFilterFields() {
@@ -144,7 +166,7 @@ class Filter {
       </form>
     `;
 
-    document.querySelector(this.element).innerHTML = template;
+    this.elements.filter.innerHTML = template;
     this.bindEvents();
   }
 }
