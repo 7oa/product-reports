@@ -1,6 +1,6 @@
 import Filter from "./filter.js";
 import Pagination from "./pagination.js";
-import { imageLink } from "./image-link.js";
+// import { imageLink } from "./image-link.js";
 import { sortFunc } from "../utils.js";
 
 class TableReport {
@@ -152,10 +152,11 @@ class TableReport {
   }
 
   _generateTitle(el) {
+    const imageLink = 'https://www.brother.in/AP/Handlers/ApHandler.ashx?m=rs&guid=8d068527-2779-4f00-8a1a-8f9cc59e3f39&pr=100';
     return `
       <div><strong>${el.displayName}</strong></div>
       <div><small>${el.productKey}</small></div>
-      ${el.image ? `<img src="${imageLink + el.image}" />` : ""}
+      ${el.image ? `<img src="${imageLink}" />` : ""}
     `;
   }
 
