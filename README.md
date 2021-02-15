@@ -1,6 +1,7 @@
 # Product report
 
 [Ссылка на страницу](https://7oa.github.io/product-reports/dist/index.html)
+
 ![пример страницы](page-example.png)
 
 Отчет по продуктам в табличном представлении.
